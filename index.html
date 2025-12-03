@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Kebocoran Sampah</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <!-- Styling -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .chart-container, .table-container {
+      width: 95%;
+      margin: 30px auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    canvas {
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Kebocoran Sampah</h1>
+
+  <!-- Grafik -->
+  <div class="chart-container">
+    <h2>Top 10 Kab/Kot dengan Total Leak Tertinggi</h2>
+    <canvas id="barChart"></canvas>
+
+    <h2>Proporsi Kebocoran Berdasarkan Kawasan</h2>
+<div style="width:400px; margin:auto;">
+  <canvas id="pieChart"></canvas>
+</div>
+
+  <!-- Tabel -->
+  <div class="table-container">
+    <h2>Data Lengkap</h2>
+    <table id="dataTable" class="display" style="width:100%"></table>
+  </div>
+
+<script>
+  fetch("data_sampah.json")
+    .then(response => response.json())
+    .then(rawData => {
+      // Pisahkan baris Total & Total Persen
+      const totalRow = rawData.find(d => d.kabkot === "Total");
+      const data = rawData.filter(d => d.kabkot !== "Total" && d.kabkot !== "Total Persen");
+
+      // --- Bar Chart Top 10 ---
+      const top10 = [...data]
+        .sort((a, b) => b.total_leak - a.total_leak)
+        .slice(0, 10);
+
+      new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+          labels: top10.map(d => d.kabkot),
+          datasets: [{
+            label: "Total Leak",
+            data: top10.map(d => d.total_leak),
+            backgroundColor: "rgba(75, 192, 192, 0.7)"
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // --- Pie Chart dari baris Total ---
+      new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: ["Pelabuhan", "Pulau", "Pesisir", "Sungai"],
+          datasets: [{
+            data: [
+              totalRow.leak_pelabuhan,
+              totalRow.leak_pulau,
+              totalRow.leak_pesisir,
+              totalRow.leak_sungai
+            ],
+            backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a,b)=>a+b,0);
+                  const value = context.raw;
+                  const percent = ((value/total)*100).toFixed(2);
+                  return context.label + ": " + value + " (" + percent + "%)";
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // --- DataTables dengan kolom persenan ---
+      $('#dataTable').DataTable({
+        data: data,
+        columns: [
+          { data: 'kabkot', title: 'Kab/Kot' },
+          { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
+          { data: 'persen_pelabuhan', title: '% Pelabuhan' },
+          { data: 'leak_pulau', title: 'Leak Pulau' },
+          { data: 'persen_pulau', title: '% Pulau' },
+          { data: 'leak_pesisir', title: 'Leak Pesisir' },
+          { data: 'persen_pesisir', title: '% Pesisir' },
+          { data: 'leak_sungai', title: 'Leak Sungai' },
+          { data: 'persen_sungai', title: '% Sungai' },
+          { data: 'total_leak', title: 'Total Leak' }
+        ],
+        pageLength: 10,
+        lengthMenu: [10, 50, 100, "All"]
+      });
+    });
+</script>
+</body>
+</html>
