@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Kebocoran Sampah</title>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- DataTables -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
   <!-- Styling -->
   <style>
     body {
@@ -31,8 +34,23 @@
     canvas {
       margin: 20px 0;
     }
+
+    /* ✅ Tombol download */
+    .dt-download-btn {
+      margin-left: 10px;
+      padding: 6px 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .dt-download-btn:hover {
+      background: #45a049;
+    }
   </style>
 </head>
+
 <body>
   <h1>Dashboard Kebocoran Sampah</h1>
 
@@ -42,9 +60,10 @@
     <canvas id="barChart"></canvas>
 
     <h2>Proporsi Kebocoran Berdasarkan Kawasan</h2>
-<div style="width:400px; margin:auto;">
-  <canvas id="pieChart"></canvas>
-</div>
+    <div style="width:400px; margin:auto;">
+      <canvas id="pieChart"></canvas>
+    </div>
+  </div>
 
   <!-- Tabel -->
   <div class="table-container">
@@ -53,100 +72,104 @@
   </div>
 
 <script>
-  fetch("data_sampah.json")
-    .then(response => response.json())
-    .then(rawData => {
-      // Pisahkan baris Total & Total Persen
-      const totalRow = rawData.find(d => d.kabkot === "Total");
-      const data = rawData.filter(d => d.kabkot !== "Total" && d.kabkot !== "Total Persen");
+fetch("data_sampah.json")
+  .then(response => response.json())
+  .then(rawData => {
 
-      // --- Bar Chart Top 10 ---
-      const top10 = [...data]
-        .sort((a, b) => b.total_leak - a.total_leak)
-        .slice(0, 10);
+    const totalRow = rawData.find(d => d.kabkot === "Total");
+    const data = rawData.filter(d => d.kabkot !== "Total" && d.kabkot !== "Total Persen");
 
-      new Chart(document.getElementById("barChart"), {
-        type: "bar",
-        data: {
-          labels: top10.map(d => d.kabkot),
-          datasets: [{
-            label: "Total Leak",
-            data: top10.map(d => d.total_leak),
-            backgroundColor: "rgba(75, 192, 192, 0.7)"
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { display: false } }
-        }
-      });
+    /* ============================
+       BAR CHART
+    ============================ */
+    const top10 = [...data]
+      .sort((a, b) => b.total_leak - a.total_leak)
+      .slice(0, 10);
 
-      // --- Pie Chart dari baris Total ---
-      new Chart(document.getElementById("pieChart"), {
-        type: "pie",
-        data: {
-          labels: ["Pelabuhan", "Pulau", "Pesisir", "Sungai"],
-          datasets: [{
-            data: [
-              totalRow.leak_pelabuhan,
-              totalRow.leak_pulau,
-              totalRow.leak_pesisir,
-              totalRow.leak_sungai
-            ],
-            backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  const total = context.dataset.data.reduce((a,b)=>a+b,0);
-                  const value = context.raw;
-                  const percent = ((value/total)*100).toFixed(2);
-                  return context.label + ": " + value + " (" + percent + "%)";
-                }
+    new Chart(document.getElementById("barChart"), {
+      type: "bar",
+      data: {
+        labels: top10.map(d => d.kabkot),
+        datasets: [{
+          label: "Total Leak",
+          data: top10.map(d => d.total_leak),
+          backgroundColor: "rgba(75, 192, 192, 0.7)"
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    /* ============================
+       PIE CHART
+    ============================ */
+    new Chart(document.getElementById("pieChart"), {
+      type: "pie",
+      data: {
+        labels: ["Pelabuhan", "Pulau", "Pesisir", "Sungai"],
+        datasets: [{
+          data: [
+            totalRow.leak_pelabuhan,
+            totalRow.leak_pulau,
+            totalRow.leak_pesisir,
+            totalRow.leak_sungai
+          ],
+          backgroundColor: ["#FF6384","#36A2EB","#FFCE56","#4BC0C0"]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.dataset.data.reduce((a,b)=>a+b,0);
+                const value = context.raw;
+                const percent = ((value/total)*100).toFixed(2);
+                return context.label + ": " + value + " (" + percent + "%)";
               }
             }
           }
         }
-      });
+      }
+    });
 
-      // --- DataTables dengan kolom persenan ---
-      $('#dataTable').DataTable({
-  data: data,
-  deferRender: true,
-  columns: [
-    { data: 'kabkot', title: 'Kab/Kot' },
-    { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
-    { data: 'persen_pelabuhan', title: '% Pelabuhan' },
-    { data: 'leak_pulau', title: 'Leak Pulau' },
-    { data: 'persen_pulau', title: '% Pulau' },
-    { data: 'leak_pesisir', title: 'Leak Pesisir' },
-    { data: 'persen_pesisir', title: '% Pesisir' },
-    { data: 'leak_sungai', title: 'Leak Sungai' },
-    { data: 'persen_sungai', title: '% Sungai' },
-    { data: 'total_leak', title: 'Total Leak' }
-  ],
-  pageLength: 10,
-  lengthMenu: [
-    [10, 50, 100, -1],
-    [10, 50, 100, "All"]
-  ]
-});
-      // ✅ Tambahkan tombol download di area kanan atas (sebelah search)
-$("#dataTable_filter").append(`
-  <a href="/public/data_estimasi_kebocoran_sampah_laut_2024.xlsx"" download>
-    <button class="dt-download-btn">Download Excel</button>
-  </a>
-`);
+    /* ============================
+       DATATABLES
+    ============================ */
+    const table = $('#dataTable').DataTable({
+      data: data,
+      deferRender: true,
+      columns: [
+        { data: 'kabkot', title: 'Kab/Kot' },
+        { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
+        { data: 'persen_pelabuhan', title: '% Pelabuhan' },
+        { data: 'leak_pulau', title: 'Leak Pulau' },
+        { data: 'persen_pulau', title: '% Pulau' },
+        { data: 'leak_pesisir', title: 'Leak Pesisir' },
+        { data: 'persen_pesisir', title: '% Pesisir' },
+        { data: 'leak_sungai', title: 'Leak Sungai' },
+        { data: 'persen_sungai', title: '% Sungai' },
+        { data: 'total_leak', title: 'Total Leak' }
+      ],
+      pageLength: 10,
+      lengthMenu: [
+        [10, 50, 100, -1],
+        [10, 50, 100, "All"]
+      ]
+    });
 
-      
-});
+    /* ============================
+       ✅ Tambahkan tombol download
+       di kanan atas tabel
+    ============================ */
+    $("#dataTable_filter").append(`
+      <a href="/data_estimasi_kebocoran_sampah_laut_2024.xlsx" download>
+        <button class="dt-download-btn">Download Excel</button>
+      </a>
+    `);
+
+  });
 </script>
+
 </body>
 </html>
-
-
-
