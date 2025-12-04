@@ -116,6 +116,7 @@
       // --- DataTables dengan kolom persenan ---
       $('#dataTable').DataTable({
         data: data,
+        deferRender: true,
         columns: [
           { data: 'kabkot', title: 'Kab/Kot' },
           { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
@@ -129,9 +130,13 @@
           { data: 'total_leak', title: 'Total Leak' }
         ],
         pageLength: 10,
-        lengthMenu: [10, 50, 100, "All"]
+        lengthMenu: [
+          [10, 50, 100, -1],
+          [10, 50, 100, "All"]
+        ]
       });
     });
 </script>
 </body>
 </html>
+
