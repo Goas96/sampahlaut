@@ -115,23 +115,28 @@
 
       // --- DataTables dengan kolom persenan ---
       $('#dataTable').DataTable({
-        data: data,
-        columns: [
-          { data: 'kabkot', title: 'Kab/Kot' },
-          { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
-          { data: 'persen_pelabuhan', title: '% Pelabuhan' },
-          { data: 'leak_pulau', title: 'Leak Pulau' },
-          { data: 'persen_pulau', title: '% Pulau' },
-          { data: 'leak_pesisir', title: 'Leak Pesisir' },
-          { data: 'persen_pesisir', title: '% Pesisir' },
-          { data: 'leak_sungai', title: 'Leak Sungai' },
-          { data: 'persen_sungai', title: '% Sungai' },
-          { data: 'total_leak', title: 'Total Leak' }
-        ],
-        pageLength: 10,
-        lengthMenu: [10, 50, 100, "All"]
-      });
-    });
+  data: data,
+  deferRender: true,
+  columns: [
+    { data: 'kabkot', title: 'Kab/Kot' },
+    { data: 'leak_pelabuhan', title: 'Leak Pelabuhan' },
+    { data: 'persen_pelabuhan', title: '% Pelabuhan' },
+    { data: 'leak_pulau', title: 'Leak Pulau' },
+    { data: 'persen_pulau', title: '% Pulau' },
+    { data: 'leak_pesisir', title: 'Leak Pesisir' },
+    { data: 'persen_pesisir', title: '% Pesisir' },
+    { data: 'leak_sungai', title: 'Leak Sungai' },
+    { data: 'persen_sungai', title: '% Sungai' },
+    { data: 'total_leak', title: 'Total Leak' }
+  ],
+  pageLength: 10,
+  lengthMenu: [
+    [10, 50, 100, -1],
+    [10, 50, 100, "All"]
+  ]
+});
+});
 </script>
 </body>
 </html>
+
